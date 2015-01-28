@@ -36,7 +36,8 @@
         android:id="@+id/textView2"
         android:layout_below="@+id/textView"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -58,7 +59,8 @@
         android:id="@+id/uploadTxtVw"
         android:layout_below="@+id/downloadTxtVw"
         android:layout_alignLeft="@+id/downloadTxtVw"
-        android:layout_alignStart="@+id/downloadTxtVw" />
+        android:layout_alignStart="@+id/downloadTxtVw"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -68,7 +70,8 @@
         android:id="@+id/textView5"
         android:layout_below="@+id/textView2"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -78,7 +81,8 @@
         android:id="@+id/latencyTxtVw"
         android:layout_below="@+id/uploadTxtVw"
         android:layout_alignLeft="@+id/uploadTxtVw"
-        android:layout_alignStart="@+id/uploadTxtVw" />
+        android:layout_alignStart="@+id/uploadTxtVw"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -88,7 +92,8 @@
         android:id="@+id/textView7"
         android:layout_below="@+id/textView5"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -98,7 +103,8 @@
         android:id="@+id/ipTxtVw"
         android:layout_below="@+id/latencyTxtVw"
         android:layout_alignLeft="@+id/latencyTxtVw"
-        android:layout_alignStart="@+id/latencyTxtVw" />
+        android:layout_alignStart="@+id/latencyTxtVw"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -108,7 +114,8 @@
         android:id="@+id/textView9"
         android:layout_below="@+id/textView7"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -118,7 +125,8 @@
         android:id="@+id/hostnameTxtVw"
         android:layout_below="@+id/ipTxtVw"
         android:layout_alignLeft="@+id/ipTxtVw"
-        android:layout_alignStart="@+id/ipTxtVw" />
+        android:layout_alignStart="@+id/ipTxtVw"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -158,6 +166,28 @@
         android:id="@+id/uploadTimeTxtVw"
         android:layout_below="@+id/downloadTimeTxtVw"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Ping:"
+        android:id="@+id/pingLabel"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/textView9"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Waiting..."
+        android:id="@+id/pingResultsTxtVw"
+        android:layout_alignTop="@+id/pingLabel"
+        android:layout_alignLeft="@+id/hostnameTxtVw"
+        android:layout_alignStart="@+id/hostnameTxtVw" />
 
 </RelativeLayout>

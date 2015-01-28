@@ -1,9 +1,9 @@
 package com.bestbuy.speedtest;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,14 +11,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.apache.http.util.ByteArrayBuffer;
-
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -32,6 +33,10 @@ public class MainActivity extends ActionBarActivity {
 
     private final int MSG_UPDATE = 1;
     private final int MSG_COMPLETE = 2;
+    private final int MSG_PING = 3;
+    private final int MSG_PING_START = 4;
+
+    public static String pingError = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +70,14 @@ public class MainActivity extends ActionBarActivity {
                     SpeedTestInfo results2 = (SpeedTestInfo) msg.obj;
                     updateResults(results2.downloadMbps, results2.downloadTimeSeconds, false);
                     break;
+                case MSG_PING:
+                    String pingResults = (String) msg.obj;
+                    updateResults(pingResults);
+                    break;
+                case MSG_PING_START:
+                    TextView pingTextVw = (TextView)findViewById(R.id.pingResultsTxtVw);
+                    pingTextVw.setText("Pinging...");
+                    break;
             }
         }
     };
@@ -73,7 +86,7 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void run() {
-            String downloadURL = "http://cdn.speedof.me/sample16384k.html?r=0.6121995334979147";
+            String downloadURL = "http://cdn.speedof.me/sample16384k.html?r=" + System.currentTimeMillis();
             //String downloadURL = "https://wordpress.org/plugins/about/readme.txt";
             //String downloadURL = "https://dl.dropboxusercontent.com/u/9028585/100mb.test";
 
@@ -85,6 +98,22 @@ public class MainActivity extends ActionBarActivity {
             InputStream inputStream = null;
 
             try {
+                //test ping
+                Message msg0 = Message.obtain(mHandler, MSG_PING_START);
+                mHandler.sendMessage(msg0);
+
+                String pingResults = ping("cdn.speedof.me");
+
+                if (pingResults != null) {
+                    Log.d("Ping Results:", pingResults);
+                    Message msg = Message.obtain(mHandler, MSG_PING, pingResults);
+                    mHandler.sendMessage(msg);
+                } else {
+                    Message msg = Message.obtain(mHandler, MSG_PING, pingError);
+                    mHandler.sendMessage(msg);
+                }
+
+                //test download
                 URL url = new URL(downloadURL);
                 URLConnection urlConnection = url.openConnection();
                 connectionLatencyTime = System.currentTimeMillis() - testStartTime;
@@ -96,8 +125,6 @@ public class MainActivity extends ActionBarActivity {
                 int loops = 1;
 
                 while ((current = inputStream.read(buffer)) != -1) {
-                    Log.d("Read:", (1024 * loops)*.001 + " KBs");
-
                     long updateTime = System.currentTimeMillis();
                     long updateDownloadTime = updateTime - testStartTime;
 
@@ -155,6 +182,11 @@ public class MainActivity extends ActionBarActivity {
         return info;
     }
 
+    private void updateResults(String pingResults) {
+        TextView pingResultsTxtVw = (TextView)findViewById(R.id.pingResultsTxtVw);
+        pingResultsTxtVw.setText(pingResults);
+    }
+
     public void updateResults(double downloadMbps, double downloadTime, boolean finished) {
         TextView downloadTxtVw = (TextView)findViewById(R.id.downloadTxtVw);
         TextView downloadTimeTxtVw = (TextView)findViewById(R.id.downloadTimeTxtVw);
@@ -168,6 +200,86 @@ public class MainActivity extends ActionBarActivity {
             startButton.setText("RESTART");
             startButton.setEnabled(true);
         }
+    }
+
+    public static int pingHost(String host) throws IOException, InterruptedException {
+        Runtime runtime = Runtime.getRuntime();
+        Process proc = runtime.exec("ping -c 1 " + host);
+        proc.waitFor();
+
+        return proc.exitValue();
+    }
+
+    public static String ping(String host) {
+        StringBuffer echo = new StringBuffer();
+        //Runtime runtime = Runtime.getRuntime();
+        Log.v("Network", "About to ping using runtime.exec");
+
+        try {
+            Log.d("PING", "Sending PING request to: " + host);
+            Process process = new ProcessBuilder()
+                    .command("/system/bin/ping", "-c", "8", host)
+                    .redirectErrorStream(true)
+                    .start();
+
+            //Process proc = runtime.exec("/system/bin/ping -c 8 " + host);
+//        proc.waitFor();
+//        int exit = proc.exitValue();
+//        if (exit == 0) {
+            InputStreamReader reader = new InputStreamReader(process.getInputStream());
+            BufferedReader buffer = new BufferedReader(reader);
+            String line = "";
+
+            while ((line = buffer.readLine()) != null) {
+                echo.append(line + "\n");
+            }
+
+            return getPingStats(echo.toString());
+        } catch (IOException e) {
+            pingError = "ping error - 1";
+            e.printStackTrace();
+            return null;
+        }
+//        } else if (exit == 1) {
+//            pingError = "failed, exit = 1";
+//            return null;
+//        } else {
+//            pingError = "error, exit = 2";
+//            return null;
+//        }
+    }
+
+    public static String getPingStats(String s) {
+        Log.d("PING RESULTS", s);
+
+        String ms = "";
+        Pattern pattern = Pattern.compile("time (\\d+)ms");
+        Matcher m = pattern.matcher(s);
+        if(m.find()) {
+            ms = m.group(1);
+            Log.d("Ping Stat:", m.group(1));
+        }
+
+        return ms + " ms";
+//        if (s.contains("0% packet loss")) {
+//            int start = s.indexOf("/mdev = ");
+//            int end = s.indexOf(" ms\n", start);
+//            s = s.substring(start + 8, end);
+//            String stats[] = s.split("/");
+//            return stats[2];
+//        } else if (s.contains("100% packet loss")) {
+//            pingError = "100% packet loss";
+//            return null;
+//        } else if (s.contains("% packet loss")) {
+//            pingError = "partial packet loss";
+//            return null;
+//        } else if (s.contains("unknown host")) {
+//            pingError = "unknown host";
+//            return null;
+//        } else {
+//            pingError = "unknown error in getPingStats";
+//            return null;
+//        }
     }
 
     private static class SpeedTestInfo {
